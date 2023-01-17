@@ -1,3 +1,4 @@
 build/
-libs/
+libs/*
+!libs/imgui/CMakeLists.txt
 res/
