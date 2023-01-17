@@ -21,3 +21,4 @@
 [submodule "libs/imgui"]
 	path = libs/imgui
 	url = https://github.com/Wuschelbueb/imgui_incl_cmake.git
+    branch = master
