@@ -1,54 +1,40 @@
+#define STB_IMAGE_IMPLEMENTATION
+
+// ImGui Headers
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <iostream>
-
-void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void processInput(GLFWwindow *window);
-
-// settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
-
-const char *vertexShaderSource = "#version 330 core\n"
-                                 "layout (location = 0) in vec3 aPos;\n"
-                                 "void main()\n"
-                                 "{\n"
-                                 "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-                                 "}\0";
-const char *fragmentShaderSource = "#version 330 core\n"
-                                   "out vec4 FragColor;\n"
-                                   "void main()\n"
-                                   "{\n"
-                                   "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-                                   "}\n\0";
+#include "openglVisualization.hpp"
+#include <nfd.hpp>
 
 int main()
 {
-    // glfw: initialize and configure
-    // ------------------------------
+    // Load GLFW and Create a Window
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+    auto mWindow = glfwCreateWindow(mWidth, mHeight, "OpenGL", nullptr, nullptr);
 
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-
-    // glfw window creation
-    // --------------------
-    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
+    // Check for Valid Context
+    if (mWindow == nullptr)
     {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
+        fprintf(stderr, "Failed to Create OpenGL Context");
+        return EXIT_FAILURE;
     }
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+    // Create Context and Load OpenGL Functions
+    glfwMakeContextCurrent(mWindow);
+    glfwSetFramebufferSizeCallback(mWindow, framebuffer_size_callback);
+    glfwSetCursorPosCallback(mWindow, mouse_callback);
+    glfwSetMouseButtonCallback(mWindow, mouse_button);
+    glfwSetScrollCallback(mWindow, scroll_callback);
+    gladLoadGL();
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
@@ -57,131 +43,127 @@ int main()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
+    // configure global opengl state
+    // -----------------------------
+    glEnable(GL_DEPTH_TEST);
 
-    // build and compile our shader program
-    // ------------------------------------
-    // vertex shader
-    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-    // check for shader compile errors
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-                  << infoLog << std::endl;
-    }
-    // fragment shader
-    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    // check for shader compile errors
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
-                  << infoLog << std::endl;
-    }
-    // link shaders
-    unsigned int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    // check for linking errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
-                  << infoLog << std::endl;
-    }
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
 
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
-    float vertices[] = {
-        -0.5f, -0.5f, 0.0f, // left
-        0.5f, -0.5f, 0.0f,  // right
-        0.0f, 0.5f, 0.0f    // top
-    };
-
-    unsigned int VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    glBindVertexArray(0);
-
-    // IMGUI_CHECKVERSION();
+    //TODO read out scale of file
+    float scale = 1.0f;
+    int nbQuads = 0;
+    IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void)io;
     ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
     ImGui_ImplOpenGL3_Init("#version 330");
-    // uncomment this call to draw in wireframe polygons.
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // initialize NFD
+    NFD::Guard nfdGuard;
+    // // auto-freeing memory
+    NFD::UniquePath outPath;
+    nfdfilteritem_t filterItem[1] = {{"Object file", "obj"}};
+    bool test = false;
+    Model ourModel;
+    Shader ourShader;
 
     // render loop
     // -----------
-    while (!glfwWindowShouldClose(window))
+    while (!glfwWindowShouldClose(mWindow))
     {
+        // per-frame time logic
+        // --------------------
+        float currentFrame = static_cast<float>(glfwGetTime());
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         // input
-        // -----
-        processInput(window);
+        processInput(mWindow);
 
         // render
-        // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+        ImGui::SliderFloat("Scaling", &scale, 0, 8);
+        ImGui::SliderInt("Number of Quads", &nbQuads, 2, 60);
+        nbQuads = ourModel.getNbQuads();
+        // ImGuiFileBrowser fileDialog;
 
-        // draw our first triangle
-        glUseProgram(shaderProgram);
-        glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        // glBindVertexArray(0); // no need to unbind it every time
-        ImGui::Begin("Gui Window");
-        ImGui::Text("hi");
-        ImGui::End();
+        if (ImGui::BeginMainMenuBar())
+        {
+            if (ImGui::BeginMenu("File"))
+            {
+                if (ImGui::MenuItem("Open File"))
+                {
+                    // show the dialog
+                    nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 1);
+                    if (result == NFD_OKAY)
+                    {
+                        initModel(outPath.get(), ourShader, ourModel);
+                        showObject = true;
+                    }
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMainMenuBar();
+        }
+
+        if (showObject)
+        {
+            // be sure to activate shader when setting uniforms/drawing objects
+            ourShader.use();
+            ourShader.setVec3("viewPos", camera.Position);
+            // light properties
+            ourShader.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
+            ourShader.setVec3("light.ambient", 1.0f, 1.0f, 1.0f);
+            ourShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+            ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+            // material properties
+            ourShader.setInt("elements", nbQuads);
+            ourShader.setFloat("scale", scale);
+            ourShader.setFloat("material.shininess", 32.0f);
+            // rotation and translation of object
+            glm::mat4 model = glm::mat4(1.0f);
+            glm::mat4 translation1 = glm::translate(glm::mat4(1.0f), -origin);
+            glm::mat4 pitchRot = glm::rotate(glm::mat4(1.0f), glm::radians(pitch), glm::vec3(1.0f, 0.0f, 0.0f));
+            glm::mat4 yawRot = glm::rotate(glm::mat4(1.0f), glm::radians(yaw), glm::vec3(0.0f, 1.0f, 0.0f));
+            glm::mat4 rotation = pitchRot * yawRot;
+            glm::mat4 translation2 = glm::translate(glm::mat4(1.0f), origin);
+            // dont change order, this matters
+            model = translation2 * rotation * translation1 * model;
+
+            // pass projection matrix to shader (note that in this case it could change every frame)
+            projection = glm::perspective(glm::radians(camera.Zoom), (float)mWidth / (float)mHeight, 0.1f, 100.0f);
+            // camera/view transformation
+            glm::mat4 view = camera.GetViewMatrix();
+
+            unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
+            unsigned int viewLoc = glGetUniformLocation(ourShader.ID, "view");
+            // pass them to the shaders (3 different ways)
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &view[0][0]);
+
+            ourShader.setMat4("projection", projection);
+            ourShader.setMat4("view", view);
+            ourShader.setMat4("model", model);
+            ourModel.Draw(ourShader);
+        }
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(mWindow);
         glfwPollEvents();
     }
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
-    // optional: de-allocate all resources once they've outlived their purpose:
-    // ------------------------------------------------------------------------
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shaderProgram);
+    // ImGui::DestroyContext();
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
@@ -195,13 +177,106 @@ void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        camera.ProcessKeyboard(FORWARD, deltaTime * 2);
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.ProcessKeyboard(UP, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.ProcessKeyboard(DOWN, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        camera.ProcessKeyboard(BACKWARD, deltaTime * 2);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.ProcessKeyboard(LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.ProcessKeyboard(RIGHT, deltaTime);
 }
-
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
-    // make sure the viewport matches the new window dimensions; note that width and
-    // height will be significantly larger than specified on retina displays.
+    // update viewport
     glViewport(0, 0, width, height);
+    // update projection matrix
+    // projection = glm::perspective(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 100.0f);
+}
+// glfw : whenever the mouse scroll wheel scrolls, this callback is called
+// ----------------------------------------------------------------------
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+{
+    camera.ProcessMouseScroll(static_cast<float>(yoffset));
+}
+
+void mouse_callback(GLFWwindow *window, double mouseX, double mouseY)
+{
+    // call io to check if mouse is on top of imgui
+    ImGuiIO &io = ImGui::GetIO();
+    // Calculate the change in mouse position since the last frame
+    float deltaX = mouseX - lastMouseX;
+    float deltaY = lastMouseY - mouseY;
+    const float sensitivity = 0.1f;
+
+    // Update the mouse position for the next frame
+    lastMouseX = mouseX;
+    lastMouseY = mouseY;
+
+    deltaX *= sensitivity;
+    deltaY *= sensitivity;
+
+    // Check if the left mouse button is pressed
+    if (leftButtonPressed && !io.WantCaptureMouse)
+    {
+        // Update the pitch and yaw angles
+        yaw += deltaX;
+        pitch += deltaY;
+
+        if (pitch > 89.0f)
+            pitch = 89.0f;
+        if (pitch < -89.0f)
+            pitch = -89.0f;
+    }
+}
+
+void mouse_button(GLFWwindow *window, int button, int action, int mods)
+{
+
+    ImGuiIO &io = ImGui::GetIO();
+    // Check if the left mouse button was pressed
+    if (button == GLFW_MOUSE_BUTTON_LEFT)
+    {
+        // Update the left button pressed flag
+        if (action == GLFW_PRESS)
+        {
+            leftButtonPressed = true;
+            io.AddMouseButtonEvent(button, leftButtonPressed);
+        }
+        else if (action == GLFW_RELEASE)
+        {
+            leftButtonPressed = false;
+            io.AddMouseButtonEvent(button, leftButtonPressed);
+        }
+    }
+}
+
+void initModel(std::string const &path, Shader &ourShader, Model &ourModel)
+{
+    // Shader ourShader("shader.vert", "shader.frag");
+    ourShader.loadShader("shader.vert", "shader.frag");
+    ourModel.loadNewModel(path);
+
+    // load models
+    // Model ourModel("../../../res/object.obj");
+    origin = ourModel.GetObjCenter();
+    cameraStartPosition = origin + glm::vec3(0.0f, 0.0f, 4.0f);
+    camera.Position = (cameraStartPosition);
+
+    //TODO load textures correctly
+    // unsigned int texture1 = TextureFromFile("texture_white.png", ".");
+    // unsigned int texture2 = TextureFromFile("texture_quad.png", ".");
+
+    // shader configuration
+    ourShader.use();
+    ourShader.setFloat("scale", 1.0f);
+    ourShader.setVec3("objectColor", 0.5f, 0.5f, 0.5f);
+    // ourShader.setInt("texture_background", 1);
+    // ourShader.setInt("texture_quad", 2);
 }
