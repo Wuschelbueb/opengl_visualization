@@ -22,6 +22,7 @@ else()
 endif()
 
 add_subdirectory(libs/imgui)
+add_subdirectory(libs/nativefiledialog-extended)
 
 include_directories(include/
     libs/assimp/include/
@@ -30,9 +31,11 @@ include_directories(include/
     libs/glm/
     libs/stb/)
 
+
 file(GLOB LIBS_SOURCES libs/glad/src/glad.c)
 file(GLOB PROJECT_HEADERS include/*.hpp)
 file(GLOB PROJECT_SOURCES src/*.cpp)
+file(GLOB PROJECT_RESOURCES res/*.png)
 file(GLOB PROJECT_SHADERS shaders/*.comp
     shaders/*.frag
     shaders/*.geom
@@ -47,6 +50,7 @@ file(GLOB PROJECT_CONFIGS CMakeLists.txt
 source_group("Headers" FILES ${PROJECT_HEADERS})
 source_group("Shaders" FILES ${PROJECT_SHADERS})
 source_group("Sources" FILES ${PROJECT_SOURCES})
+source_group("Resources" FILES ${PROJECT_RESOURCES})
 source_group("Libs" FILES ${LIBS_SOURCES})
 
 add_definitions(-DGLFW_INCLUDE_NONE
@@ -56,6 +60,7 @@ add_executable(${PROJECT_NAME}
     ${PROJECT_HEADERS}
     ${PROJECT_SHADERS}
     ${PROJECT_CONFIGS}
+    ${PROJECT_RESOURCES}
     ${LIBS_SOURCES}
 )
 
@@ -64,6 +69,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC imgui imgui-glfw imgui-opengl3
     glfw
     ${GLFW_LIBRARIES}
     ${GLAD_LIBRARIES}
+    PRIVATE nfd
 )
 set_target_properties(${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${PROJECT_NAME})
@@ -71,4 +77,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/shaders $<TARGET_FILE_DIR:${PROJECT_NAME}>
-    DEPENDS ${PROJECT_SHADERS})
+    DEPENDS ${PROJECT_SHADERS}
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:${PROJECT_NAME}>
+    DEPENDS ${PROJECT_RESOURCES}
+)
