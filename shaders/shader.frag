@@ -25,8 +25,8 @@ uniform Material material;
 uniform Light light;
 
 // texture samplers
-uniform sampler2D texture_background;
-uniform sampler2D texture_quad;
+uniform sampler2D texture_diffuse1;
+uniform sampler2D texture_diffuse2;
 
 // // Coordinates to start the repetition from
 uniform float center_u;
@@ -146,9 +146,9 @@ void main()
     //         color += vec3(0.0, 0.0, 0.0);
     // }
 
-    vec4 bg_color = texture(texture_background, TexCoord);
+    vec4 bg_color = texture(texture_diffuse1, TexCoord);
     vec3 tempLighting = (ambient + diffuse + specular);
-    vec4 quad_texture = texture(texture_quad, offset);
+    vec4 quad_texture = texture(texture_diffuse2, offset);
     vec4 bgColorEnd = vec4(tempLighting * objectColor, 1.0) * bg_color;
     vec4 quadTexEnd = vec4(tempLighting, 1.0) * quad_texture;
 	if (all(lessThan(abs(offset), bounds))) {

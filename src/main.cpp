@@ -1,3 +1,8 @@
+/* ---------------------------------------------------------------------
+ * I took some of this code from https://github.com/JoeyDeVries/LearnOpenGL and
+ * adapted a lot for my needs.
+ * ----------------------------------------------------------------------
+ */
 #define STB_IMAGE_IMPLEMENTATION
 
 // ImGui Headers
@@ -36,22 +41,19 @@ int main()
     glfwSetScrollCallback(mWindow, scroll_callback);
     gladLoadGL();
 
-    // glad: load all OpenGL function pointers
-    // ---------------------------------------
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
-    // configure global opengl state
-    // -----------------------------
+    
     glEnable(GL_DEPTH_TEST);
 
     fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
 
-    //TODO read out scale of file
-    float scale = 1.0f;
-    int nbQuads = 0;
+    float scale = 1.0f, minScale = 0, maxScale = 4;
+    int nbQuads = 0, upperThreshold = 0, originalNumberQuads = 0;
+
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
@@ -59,17 +61,20 @@ int main()
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
     ImGui_ImplOpenGL3_Init("#version 330");
+
     // initialize NFD
     NFD::Guard nfdGuard;
-    // // auto-freeing memory
+    // auto-freeing memory
     NFD::UniquePath outPath;
     nfdfilteritem_t filterItem[1] = {{"Object file", "obj"}};
-    bool test = false;
-    Model ourModel;
-    Shader ourShader;
 
-    // render loop
-    // -----------
+    Model ourModel;
+
+    Shader ourShader("shader.vert", "shader.frag");
+    ourShader.use();
+    ourShader.setFloat("scale", 1.0f);
+    ourShader.setVec3("objectColor", 0.5f, 0.5f, 0.5f);
+
     while (!glfwWindowShouldClose(mWindow))
     {
         // per-frame time logic
@@ -83,15 +88,13 @@ int main()
 
         // render
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        ImGuiIO &io = ImGui::GetIO();
+        io.FontGlobalScale = 1.3f;
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        ImGui::SliderFloat("Scaling", &scale, 0, 8);
-        ImGui::SliderInt("Number of Quads", &nbQuads, 2, 60);
-        nbQuads = ourModel.getNbQuads();
-        // ImGuiFileBrowser fileDialog;
 
         if (ImGui::BeginMainMenuBar())
         {
@@ -103,7 +106,13 @@ int main()
                     nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 1);
                     if (result == NFD_OKAY)
                     {
-                        initModel(outPath.get(), ourShader, ourModel);
+                        ourModel.loadNewModel(outPath.get(), ".");
+                        nbQuads = ourModel.getNbQuads();
+                        upperThreshold = nbQuads;
+                        originalNumberQuads = nbQuads;
+                        origin = ourModel.GetObjCenter();
+                        cameraStartPosition = origin + glm::vec3(0.0f, 0.0f, 4.0f);
+                        camera.Position = (cameraStartPosition);
                         showObject = true;
                     }
                 }
@@ -111,7 +120,21 @@ int main()
             }
             ImGui::EndMainMenuBar();
         }
-
+        ImGui::Begin("Description", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::Text("Number of Quads:");
+        ImGui::SliderInt(" ", &nbQuads, 2, upperThreshold);
+        ImGui::Text("Scale:");
+        ImGui::SliderFloat("Scaling", &scale, minScale, maxScale);
+        ImGui::Text("Controls");
+        ImGui::BulletText("W - Move up");
+        ImGui::BulletText("A - Move left");
+        ImGui::BulletText("S - Move down");
+        ImGui::BulletText("D - Move right");
+        ImGui::BulletText("Q - Move backward");
+        ImGui::BulletText("E - Move forward");
+        ImGui::BulletText("Mouse Wheel - Zoom");
+        ImGui::BulletText("Left Mouse - Rotate");
+        ImGui::End();
         if (showObject)
         {
             // be sure to activate shader when setting uniforms/drawing objects
@@ -123,8 +146,8 @@ int main()
             ourShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
             ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
             // material properties
-            ourShader.setInt("elements", nbQuads);
             ourShader.setFloat("scale", scale);
+            ourShader.setInt("elements", nbQuads);
             ourShader.setFloat("material.shininess", 32.0f);
             // rotation and translation of object
             glm::mat4 model = glm::mat4(1.0f);
@@ -155,28 +178,20 @@ int main()
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
+
         glfwSwapBuffers(mWindow);
         glfwPollEvents();
     }
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
-    // ImGui::DestroyContext();
 
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
     glfwTerminate();
     return 0;
 }
 
-// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
         camera.ProcessKeyboard(FORWARD, deltaTime * 2);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -190,17 +205,13 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
 }
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
     // update viewport
     glViewport(0, 0, width, height);
-    // update projection matrix
-    // projection = glm::perspective(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 100.0f);
 }
-// glfw : whenever the mouse scroll wheel scrolls, this callback is called
-// ----------------------------------------------------------------------
+
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
@@ -255,28 +266,4 @@ void mouse_button(GLFWwindow *window, int button, int action, int mods)
             io.AddMouseButtonEvent(button, leftButtonPressed);
         }
     }
-}
-
-void initModel(std::string const &path, Shader &ourShader, Model &ourModel)
-{
-    // Shader ourShader("shader.vert", "shader.frag");
-    ourShader.loadShader("shader.vert", "shader.frag");
-    ourModel.loadNewModel(path);
-
-    // load models
-    // Model ourModel("../../../res/object.obj");
-    origin = ourModel.GetObjCenter();
-    cameraStartPosition = origin + glm::vec3(0.0f, 0.0f, 4.0f);
-    camera.Position = (cameraStartPosition);
-
-    //TODO load textures correctly
-    // unsigned int texture1 = TextureFromFile("texture_white.png", ".");
-    // unsigned int texture2 = TextureFromFile("texture_quad.png", ".");
-
-    // shader configuration
-    ourShader.use();
-    ourShader.setFloat("scale", 1.0f);
-    ourShader.setVec3("objectColor", 0.5f, 0.5f, 0.5f);
-    // ourShader.setInt("texture_background", 1);
-    // ourShader.setInt("texture_quad", 2);
 }
