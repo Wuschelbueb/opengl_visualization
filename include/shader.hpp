@@ -1,6 +1,11 @@
 #ifndef SHADER_HPP
 #define SHADER_HPP
 
+/* ---------------------------------------------------------------------
+ * I took this code from https://github.com/JoeyDeVries/LearnOpenGL and
+ * adapted it for my needs.
+ * ----------------------------------------------------------------------
+ */
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <string>

@@ -1,3 +1,8 @@
+/* ---------------------------------------------------------------------
+ * I took this code from https://github.com/JoeyDeVries/LearnOpenGL and
+ * adapted it for my needs.
+ * ----------------------------------------------------------------------
+ */
 #ifndef MESH_HPP
 #define MESH_HPP
 

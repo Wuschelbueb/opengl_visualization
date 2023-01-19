@@ -36,8 +36,8 @@
 #include <cstdlib>
 
 // Define Some Constants
-const int mWidth = 1500;
-const int mHeight = 1500;
+const int mWidth = 1920;
+const int mHeight = 1080;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));

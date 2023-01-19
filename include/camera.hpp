@@ -1,3 +1,8 @@
+/* ---------------------------------------------------------------------
+ * I took this code from https://github.com/JoeyDeVries/LearnOpenGL and
+ * adapted it for my needs.
+ * ----------------------------------------------------------------------
+ */
 #ifndef CAMERA_HPP
 #define CAMERA_HPP
 

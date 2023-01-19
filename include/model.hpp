@@ -1,3 +1,8 @@
+/* ---------------------------------------------------------------------
+ * I took this code from https://github.com/JoeyDeVries/LearnOpenGL and
+ * adapted it for my needs.
+ * ----------------------------------------------------------------------
+ */
 #ifndef MODEL_HPP
 #define MODEL_HPP
 
@@ -19,7 +24,6 @@
 #include <vector>
 #include <filesystem>
 
-//TODO add delete object function
 unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma = false);
 
 class Model
@@ -32,9 +36,9 @@ public:
     bool gammaCorrection;
 
     // constructor, expects a filepath to a 3D model.
-    Model(std::string const &path, bool gamma = false) : gammaCorrection(gamma)
+    Model(std::string const &path, std::string const &pathTex, bool gamma = false) : gammaCorrection(gamma)
     {
-        loadModel(path);
+        loadModel(path, pathTex);
     }
 
     Model()
@@ -46,9 +50,9 @@ public:
         return objectCenter;
     }
 
-    void loadNewModel(std::string const &path)
+    void loadNewModel(std::string const &path, std::string const &pathTex)
     {
-        loadModel(path);
+        loadModel(path, pathTex);
     }
     // draws the model, and thus all its meshes
     void Draw(Shader &shader)
@@ -76,7 +80,7 @@ private:
     double centerU = 0, centerV = 0;
     int nbQuads = 0;
     // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
-    void loadModel(std::string const &path)
+    void loadModel(std::string const &path, std::string const &pathTex)
     {
         readFile(path);
         // read file via ASSIMP
@@ -92,7 +96,7 @@ private:
         directory = path.substr(0, path.find_last_of('/'));
 
         // process ASSIMP's root node recursively
-        processNode(scene->mRootNode, scene);
+        processNode(scene->mRootNode, scene, pathTex);
     }
 
     void readFile(std::string const &path)
@@ -125,7 +129,7 @@ private:
     }
 
     // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
-    void processNode(aiNode *node, const aiScene *scene)
+    void processNode(aiNode *node, const aiScene *scene, std::string const &path)
     {
         // process each mesh located at the current node
         for (unsigned int i = 0; i < node->mNumMeshes; i++)
@@ -133,16 +137,16 @@ private:
             // the node object only contains indices to index the actual objects in the scene.
             // the scene contains all the data, node is just to keep stuff organized (like relations between nodes).
             aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
-            meshes.push_back(processMesh(mesh, scene));
+            meshes.push_back(processMesh(mesh, scene, path));
         }
         // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
         for (unsigned int i = 0; i < node->mNumChildren; i++)
         {
-            processNode(node->mChildren[i], scene);
+            processNode(node->mChildren[i], scene, path);
         }
     }
 
-    Mesh processMesh(aiMesh *mesh, const aiScene *scene)
+    Mesh processMesh(aiMesh *mesh, const aiScene *scene, std::string const &path)
     {
         // data to fill
         std::vector<Vertex> vertices;
@@ -225,10 +229,26 @@ private:
         textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
         if (textures.empty())
         {
+            addTexture(textures, path);
         }
 
         // return a mesh object created from the extracted mesh data
         return Mesh(vertices, indices, textures);
+    }
+
+    void addTexture(std::vector<Texture> &textures, std::string const &path)
+    {
+        Texture bg_texture, quadTexture;
+        std::cout << path << std::endl;
+        bg_texture.id = TextureFromFile("texture_white.png", path);
+        bg_texture.type = "texture_diffuse";
+        bg_texture.path = "texture_white.png";
+        textures.push_back(bg_texture);
+
+        quadTexture.id = TextureFromFile("texture_quad.png", path);
+        quadTexture.type = "texture_diffuse";
+        quadTexture.path = "texture_quad.png";
+        textures.push_back(quadTexture);
     }
 
     // checks all material textures of a given type and loads the textures if they're not loaded yet.
@@ -295,8 +315,6 @@ unsigned int TextureFromFile(const char *path, const std::string &directory, boo
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         stbi_image_free(data);
-        //TODO load textures correctly
-        // glBindTexture(GL_TEXTURE_2D, 0);
     }
     else
     {
