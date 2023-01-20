@@ -125,7 +125,7 @@ int main()
         ImGui::SliderInt(" ", &nbQuads, 2, upperThreshold);
         ImGui::Text("Scale:");
         ImGui::SliderFloat("Scaling", &scale, minScale, maxScale);
-        ImGui::Text("Controls");
+        ImGui::Text("Controls:");
         ImGui::BulletText("W - Move up");
         ImGui::BulletText("A - Move left");
         ImGui::BulletText("S - Move down");
