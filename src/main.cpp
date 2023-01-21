@@ -20,7 +20,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
     auto mWindow = glfwCreateWindow(mWidth, mHeight, "OpenGL", nullptr, nullptr);
 
 #ifdef __APPLE__
@@ -46,7 +46,7 @@ int main()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
-    
+
     glEnable(GL_DEPTH_TEST);
 
     fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
@@ -69,6 +69,15 @@ int main()
     nfdfilteritem_t filterItem[1] = {{"Object file", "obj"}};
 
     Model ourModel;
+    // for testing purposes
+    ourModel.loadNewModel("../../../../../Desktop/object.obj", ".");
+    nbQuads = ourModel.getNbQuads();
+    upperThreshold = nbQuads;
+    originalNumberQuads = nbQuads;
+    origin = ourModel.GetObjCenter();
+    cameraStartPosition = origin + glm::vec3(0.0f, 0.0f, 4.0f);
+    camera.Position = (cameraStartPosition);
+    showObject = true;
 
     Shader ourShader("shader.vert", "shader.frag");
     ourShader.use();
@@ -108,7 +117,7 @@ int main()
                     {
                         ourModel.loadNewModel(outPath.get(), ".");
                         nbQuads = ourModel.getNbQuads();
-                        upperThreshold = nbQuads;
+                        upperThreshold = nbQuads*maxScale;
                         originalNumberQuads = nbQuads;
                         origin = ourModel.GetObjCenter();
                         cameraStartPosition = origin + glm::vec3(0.0f, 0.0f, 4.0f);
@@ -122,18 +131,21 @@ int main()
         }
         ImGui::Begin("Description", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::Text("Number of Quads:");
-        ImGui::SliderInt(" ", &nbQuads, 2, upperThreshold);
+        ImGui::SliderInt("##numberQ", &nbQuads, 2, upperThreshold);
         ImGui::Text("Scale:");
-        ImGui::SliderFloat("Scaling", &scale, minScale, maxScale);
-        ImGui::Text("Controls:");
-        ImGui::BulletText("W - Move up");
-        ImGui::BulletText("A - Move left");
-        ImGui::BulletText("S - Move down");
-        ImGui::BulletText("D - Move right");
-        ImGui::BulletText("Q - Move backward");
-        ImGui::BulletText("E - Move forward");
-        ImGui::BulletText("Mouse Wheel - Zoom");
-        ImGui::BulletText("Left Mouse - Rotate");
+        ImGui::SliderFloat("##scale", &scale, minScale, maxScale);
+        if (ImGui::CollapsingHeader("Controls:"))
+        {
+            ImGui::BulletText("W - Move up");
+            ImGui::BulletText("A - Move left");
+            ImGui::BulletText("S - Move down");
+            ImGui::BulletText("D - Move right");
+            ImGui::BulletText("Q - Move backward");
+            ImGui::BulletText("E - Move forward");
+            ImGui::BulletText("Mouse Wheel - Zoom");
+            ImGui::BulletText("Left Mouse - Rotate");
+        }
+
         ImGui::End();
         if (showObject)
         {
@@ -158,7 +170,7 @@ int main()
             glm::mat4 translation2 = glm::translate(glm::mat4(1.0f), origin);
             // dont change order, this matters
             model = translation2 * rotation * translation1 * model;
-
+            // change mwidth and mheight to not be constant
             // pass projection matrix to shader (note that in this case it could change every frame)
             projection = glm::perspective(glm::radians(camera.Zoom), (float)mWidth / (float)mHeight, 0.1f, 100.0f);
             // camera/view transformation
@@ -210,6 +222,8 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
     // update viewport
     glViewport(0, 0, width, height);
+    mWidth = width;
+    mHeight = height;
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
