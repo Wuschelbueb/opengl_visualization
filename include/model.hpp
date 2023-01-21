@@ -21,6 +21,7 @@
 #include <sstream>
 #include <iostream>
 #include <map>
+#include <cmath>
 #include <vector>
 #include <filesystem>
 
@@ -45,11 +46,6 @@ public:
     {
     }
 
-    glm::vec3 GetObjCenter()
-    {
-        return objectCenter;
-    }
-
     void loadNewModel(std::string const &path, std::string const &pathTex)
     {
         loadModel(path, pathTex);
@@ -72,6 +68,11 @@ public:
     int getNbQuads() const
     {
         return nbQuads;
+    }
+
+    glm::vec3 GetObjCenter()
+    {
+        return objectCenter;
     }
 
 private:
@@ -180,6 +181,11 @@ private:
                 // use models where a vertex can have multiple texture coordinates so we always take the first set (0).
                 vec.x = mesh->mTextureCoords[0][i].x;
                 vec.y = mesh->mTextureCoords[0][i].y;
+                if (vec.x == 0 && vec.y == 1)
+                {
+                    vec = {NAN, NAN};
+                }
+
                 vertex.TexCoords = vec;
                 // tangent
                 vector.x = mesh->mTangents[i].x;
@@ -193,8 +199,9 @@ private:
                 vertex.Bitangent = vector;
             }
             else
-                vertex.TexCoords = glm::vec2(0.0f, 0.0f);
-
+            {
+                vertex.TexCoords = glm::vec2(NAN, NAN);
+            }
             vertices.push_back(vertex);
         }
         objectCenter /= mesh->mNumVertices;
@@ -238,17 +245,15 @@ private:
 
     void addTexture(std::vector<Texture> &textures, std::string const &path)
     {
-        Texture bg_texture, quadTexture;
-        std::cout << path << std::endl;
-        bg_texture.id = TextureFromFile("texture_white.png", path);
-        bg_texture.type = "texture_diffuse";
-        bg_texture.path = "texture_white.png";
-        textures.push_back(bg_texture);
-
-        quadTexture.id = TextureFromFile("texture_quad.png", path);
-        quadTexture.type = "texture_diffuse";
-        quadTexture.path = "texture_quad.png";
-        textures.push_back(quadTexture);
+        Texture quadTextureWhite, quadTextureGrey;
+        quadTextureWhite.id = TextureFromFile("texture_quad.png", path);
+        quadTextureWhite.type = "texture_diffuse";
+        quadTextureWhite.path = "texture_quad.png";
+        textures.push_back(quadTextureWhite);
+        quadTextureGrey.id = TextureFromFile("texture_quad_grey.png", path);
+        quadTextureGrey.type = "texture_diffuse";
+        quadTextureGrey.path = "texture_quad_grey.png";
+        textures.push_back(quadTextureGrey);
     }
 
     // checks all material textures of a given type and loads the textures if they're not loaded yet.

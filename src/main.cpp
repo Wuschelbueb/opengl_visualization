@@ -51,8 +51,8 @@ int main()
 
     fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
 
-    float scale = 1.0f, minScale = 0, maxScale = 4;
-    int nbQuads = 0, upperThreshold = 0, originalNumberQuads = 0;
+    float scale = 1.0f, minScale = 0.1, maxScale = 4;
+    int nbQuads = 0, upperThreshold = 0;
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -69,16 +69,6 @@ int main()
     nfdfilteritem_t filterItem[1] = {{"Object file", "obj"}};
 
     Model ourModel;
-    // for testing purposes
-    ourModel.loadNewModel("../../../../../Desktop/object.obj", ".");
-    nbQuads = ourModel.getNbQuads();
-    upperThreshold = nbQuads;
-    originalNumberQuads = nbQuads;
-    origin = ourModel.GetObjCenter();
-    cameraStartPosition = origin + glm::vec3(0.0f, 0.0f, 4.0f);
-    camera.Position = (cameraStartPosition);
-    showObject = true;
-
     Shader ourShader("shader.vert", "shader.frag");
     ourShader.use();
     ourShader.setFloat("scale", 1.0f);
@@ -117,8 +107,7 @@ int main()
                     {
                         ourModel.loadNewModel(outPath.get(), ".");
                         nbQuads = ourModel.getNbQuads();
-                        upperThreshold = nbQuads*maxScale;
-                        originalNumberQuads = nbQuads;
+                        upperThreshold = nbQuads * maxScale;
                         origin = ourModel.GetObjCenter();
                         cameraStartPosition = origin + glm::vec3(0.0f, 0.0f, 4.0f);
                         camera.Position = (cameraStartPosition);
@@ -134,6 +123,7 @@ int main()
         ImGui::SliderInt("##numberQ", &nbQuads, 2, upperThreshold);
         ImGui::Text("Scale:");
         ImGui::SliderFloat("##scale", &scale, minScale, maxScale);
+        ImGui::Checkbox("change Texture color", &whiteTexture);
         if (ImGui::CollapsingHeader("Controls:"))
         {
             ImGui::BulletText("W - Move up");
@@ -145,8 +135,8 @@ int main()
             ImGui::BulletText("Mouse Wheel - Zoom");
             ImGui::BulletText("Left Mouse - Rotate");
         }
-
         ImGui::End();
+
         if (showObject)
         {
             // be sure to activate shader when setting uniforms/drawing objects
@@ -161,6 +151,7 @@ int main()
             ourShader.setFloat("scale", scale);
             ourShader.setInt("elements", nbQuads);
             ourShader.setFloat("material.shininess", 32.0f);
+            ourShader.setBool("changeTexture", whiteTexture);
             // rotation and translation of object
             glm::mat4 model = glm::mat4(1.0f);
             glm::mat4 translation1 = glm::translate(glm::mat4(1.0f), -origin);

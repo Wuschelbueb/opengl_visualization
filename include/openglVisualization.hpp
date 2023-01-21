@@ -48,7 +48,7 @@ float lastFrame = 0.0f;
 glm::mat4 projection;
 // mouse movement
 bool leftButtonPressed = false;
-bool showObject = false;
+bool showObject = false, whiteTexture = false;
 int lastMouseX = 0;
 int lastMouseY = 0;
 float pitch = 0.f;
