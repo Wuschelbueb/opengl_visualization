@@ -24,7 +24,7 @@ endif()
 add_subdirectory(libs/nativefiledialog-extended)
 
 include_directories(include/
-    include/imgui
+    libs/imgui/include/
     libs/assimp/include/
     libs/glad/include/
     libs/glfw/include/
@@ -33,10 +33,10 @@ include_directories(include/
 
 file(GLOB LIBS_SOURCES libs/glad/src/glad.c)
 file(GLOB PROJECT_HEADERS include/*.hpp
-    include/imgui/*.hpp   
+    libs/imgui/include/*.hpp   
 )
 file(GLOB PROJECT_SOURCES src/*.cpp
-    src/imgui/*.cpp)
+    libs/imgui/src/*.cpp)
 file(GLOB PROJECT_RESOURCES res/*.png)
 file(GLOB PROJECT_SHADERS shaders/*.comp
     shaders/*.frag
