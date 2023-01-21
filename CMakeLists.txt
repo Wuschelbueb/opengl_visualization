@@ -21,20 +21,22 @@ else()
     endif()
 endif()
 
-add_subdirectory(libs/imgui)
 add_subdirectory(libs/nativefiledialog-extended)
 
 include_directories(include/
+    include/imgui
     libs/assimp/include/
     libs/glad/include/
     libs/glfw/include/
     libs/glm/
     libs/stb/)
 
-
 file(GLOB LIBS_SOURCES libs/glad/src/glad.c)
-file(GLOB PROJECT_HEADERS include/*.hpp)
-file(GLOB PROJECT_SOURCES src/*.cpp)
+file(GLOB PROJECT_HEADERS include/*.hpp
+    include/imgui/*.hpp   
+)
+file(GLOB PROJECT_SOURCES src/*.cpp
+    src/imgui/*.cpp)
 file(GLOB PROJECT_RESOURCES res/*.png)
 file(GLOB PROJECT_SHADERS shaders/*.comp
     shaders/*.frag
@@ -64,7 +66,7 @@ add_executable(${PROJECT_NAME}
     ${LIBS_SOURCES}
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC imgui imgui-glfw imgui-opengl3
+target_link_libraries(${PROJECT_NAME} PUBLIC
     assimp
     glfw
     ${GLFW_LIBRARIES}
