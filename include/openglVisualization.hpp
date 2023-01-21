@@ -14,7 +14,7 @@
 
 // Object loader Headers
 #include <assimp/Importer.hpp>
-#include <assimp/postprocess.h> 
+#include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
 // Matrix Headers
@@ -30,6 +30,9 @@
 #include <shader.hpp>
 #include <camera.hpp>
 #include <model.hpp>
+
+// nfd header
+#include <nfd.hpp>
 
 // Standard Headers
 #include <cstdio>
@@ -60,5 +63,6 @@ void mouse_callback(GLFWwindow *window, double mouseX, double mouseY);
 void mouse_button(GLFWwindow *window, int button, int action, int mods);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void initModel(std::string const &path, Shader &ourShader, Model &ourModel);
+void loadModel(const string &path, Model &ourModel, int &nbQuads, int &upperThreshold, Camera &camera, bool &showObject);
 
-#endif 
+#endif

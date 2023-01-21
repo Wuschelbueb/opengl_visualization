@@ -99,24 +99,26 @@ int main()
         {
             if (ImGui::BeginMenu("File"))
             {
-                if (ImGui::MenuItem("Open File"))
+                if (ImGui::MenuItem("Open File (Ctrl + O)"))
                 {
                     // show the dialog
                     nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 1);
                     if (result == NFD_OKAY)
                     {
-                        ourModel.loadNewModel(outPath.get(), ".");
-                        nbQuads = ourModel.getNbQuads();
-                        upperThreshold = nbQuads * maxScale;
-                        origin = ourModel.GetObjCenter();
-                        cameraStartPosition = origin + glm::vec3(0.0f, 0.0f, 4.0f);
-                        camera.Position = (cameraStartPosition);
-                        showObject = true;
+                        loadModel(outPath.get(), ourModel, nbQuads, upperThreshold, camera, showObject);
                     }
                 }
                 ImGui::EndMenu();
             }
             ImGui::EndMainMenuBar();
+        }
+        if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_O)) && ImGui::GetIO().KeyCtrl)
+        {
+            nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 1);
+            if (result == NFD_OKAY)
+            {
+                loadModel(outPath.get(), ourModel, nbQuads, upperThreshold, camera, showObject);
+            }
         }
         ImGui::Begin("Description", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
         ImGui::Text("Number of Quads:");
@@ -254,7 +256,6 @@ void mouse_callback(GLFWwindow *window, double mouseX, double mouseY)
 
 void mouse_button(GLFWwindow *window, int button, int action, int mods)
 {
-
     ImGuiIO &io = ImGui::GetIO();
     // Check if the left mouse button was pressed
     if (button == GLFW_MOUSE_BUTTON_LEFT)
@@ -271,4 +272,15 @@ void mouse_button(GLFWwindow *window, int button, int action, int mods)
             io.AddMouseButtonEvent(button, leftButtonPressed);
         }
     }
+}
+
+void loadModel(const string &path, Model &ourModel, int &nbQuads, int &upperThreshold, Camera &camera, bool &showObject)
+{
+    ourModel.loadNewModel(path, ".");
+    nbQuads = ourModel.getNbQuads();
+    upperThreshold = nbQuads * 4;
+    origin = ourModel.GetObjCenter();
+    cameraStartPosition = origin + glm::vec3(0.0f, 0.0f, 4.0f);
+    camera.Position = (cameraStartPosition);
+    showObject = true;
 }
