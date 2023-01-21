@@ -86,7 +86,7 @@ private:
         readFile(path);
         // read file via ASSIMP
         Assimp::Importer importer;
-        const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+        const aiScene *scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals  | aiProcess_CalcTangentSpace);
         // check for errors
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) // if is Not Zero
         {
@@ -113,7 +113,6 @@ private:
                 {
                     std::stringstream ss(line.substr(12));
                     ss >> centerU >> centerV;
-                    centerV = 1.0 - centerV;
                 }
                 if (line.find("# nbQuads: ") == 0)
                 {
@@ -181,7 +180,7 @@ private:
                 // use models where a vertex can have multiple texture coordinates so we always take the first set (0).
                 vec.x = mesh->mTextureCoords[0][i].x;
                 vec.y = mesh->mTextureCoords[0][i].y;
-                if (vec.x == 0 && vec.y == 1)
+                if (vec.x == 0 && vec.y == 101)
                 {
                     vec = {NAN, NAN};
                 }
