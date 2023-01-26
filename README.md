@@ -26,7 +26,7 @@ In addition to the tools for coding with OpenGL, GLFW, and managing dependencies
 Functionality           | Library
 ----------------------- | ------------------------------------------
 Mesh Loading            | [assimp](https://github.com/assimp/assimp)
-User Interface          | [imgui](https://github.com/Wuschelbueb/imgui_incl_cmake.git)
+User Interface          | [imgui](https://github.com/ocornut/imgui.git)
 OpenGL Function Loader  | [glad](https://github.com/Dav1dde/glad)
 Windowing and Input     | [glfw](https://github.com/glfw/glfw)
 OpenGL Mathematics      | [glm](https://github.com/g-truc/glm)
