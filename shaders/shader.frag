@@ -38,7 +38,8 @@ uniform bool changeTexture;
 uniform float scale;
 
 // Number of elements along each axis
-uniform int elements;
+uniform int element_u;
+uniform int element_v;
 
 uniform float u_angle;
 
@@ -48,7 +49,7 @@ void main()
     vec2 scale = vec2(scale, scale);
     float sin_factor = sin(u_angle);
     float cos_factor = cos(u_angle);
-    vec2 bounds = vec2(float(elements/2), float(elements/2));
+    vec2 bounds = vec2(float(element_u/2), float(element_v/2));
 
     //  Compute absolute offset from center
     vec2 offset = scale * (TexCoord - center);

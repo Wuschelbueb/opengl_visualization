@@ -52,7 +52,7 @@ int main()
     fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
 
     float scale = 1.0f, minScale = 0.1, maxScale = 4;
-    int nbQuads = 0, upperThreshold = 0;
+    int nbQuadU = 0, nbQuadV = 0, upperThreshold = 0;
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -106,6 +106,8 @@ int main()
                     if (result == NFD_OKAY)
                     {
                         loadModel(outPath.get(), ourModel, nbQuads, upperThreshold, camera, showObject);
+                        nbQuadU = nbQuads;
+                        nbQuadV = nbQuads;
                     }
                 }
                 ImGui::EndMenu();
@@ -118,11 +120,15 @@ int main()
             if (result == NFD_OKAY)
             {
                 loadModel(outPath.get(), ourModel, nbQuads, upperThreshold, camera, showObject);
+                nbQuadU = nbQuads;
+                nbQuadV = nbQuads;
             }
         }
         ImGui::Begin("Description", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-        ImGui::Text("Number of Quads:");
-        ImGui::SliderInt("##numberQ", &nbQuads, 2, upperThreshold);
+        ImGui::Text("Number of Quads U:");
+        ImGui::SliderInt("##numberQU", &nbQuadU, 2, upperThreshold);
+        ImGui::Text("Number of Quads V:");
+        ImGui::SliderInt("##numberQV", &nbQuadV, 2, upperThreshold);
         ImGui::Text("Scale:");
         ImGui::SliderFloat("##scale", &scale, minScale, maxScale);
         ImGui::Checkbox("change Texture color", &whiteTexture);
@@ -151,7 +157,8 @@ int main()
             ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
             // material properties
             ourShader.setFloat("scale", scale);
-            ourShader.setInt("elements", nbQuads);
+            ourShader.setInt("element_u", nbQuadU);
+            ourShader.setInt("element_v", nbQuadV);
             ourShader.setFloat("material.shininess", 32.0f);
             ourShader.setBool("changeTexture", whiteTexture);
             // rotation and translation of object

@@ -61,8 +61,10 @@ public:
         glUniform1f(center_u, centerU);
         float center_v = glGetUniformLocation(shader.ID, "center_v");
         glUniform1f(center_v, centerV);
-        int nb_quads = glGetUniformLocation(shader.ID, "elements");
-        glUniform1i(nb_quads, nbQuads);
+        int nb_quadU = glGetUniformLocation(shader.ID, "element_u");
+        glUniform1i(nb_quadU, nbQuads);
+        int nb_quadV = glGetUniformLocation(shader.ID, "element_v");
+        glUniform1i(nb_quadV, nbQuads);
     }
 
     int getNbQuads() const
