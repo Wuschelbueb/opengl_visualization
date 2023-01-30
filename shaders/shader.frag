@@ -35,7 +35,8 @@ uniform float center_v;
 uniform bool changeTexture;
 
 // // Set scale for uv coordinates
-uniform float scale;
+uniform float scale_u;
+uniform float scale_v;
 
 // Number of elements along each axis
 uniform int element_u;
@@ -46,7 +47,7 @@ uniform float u_angle;
 void main()
 { 
     vec2 center = vec2(center_u, center_v);
-    vec2 scale = vec2(scale, scale);
+    vec2 scale = vec2(scale_u, scale_v);
     float sin_factor = sin(u_angle);
     float cos_factor = cos(u_angle);
     vec2 bounds = vec2(float(element_u/2), float(element_v/2));

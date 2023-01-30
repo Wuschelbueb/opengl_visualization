@@ -50,9 +50,10 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
-
-    float scale = 1.0f, minScale = 0.1, maxScale = 4;
-    int nbQuadU = 0, nbQuadV = 0, upperThreshold = 0;
+    float minScale = 0.1, maxScale = 4;
+    float scale_u = 1.0f, scale_v = 1.0f;
+    int nbQuads = 0, upperThreshold = 0;
+    int nbQuadU = 0, nbQuadV = 0;
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -71,7 +72,8 @@ int main()
     Model ourModel;
     Shader ourShader("shader.vert", "shader.frag");
     ourShader.use();
-    ourShader.setFloat("scale", 1.0f);
+    ourShader.setFloat("scale_u", 1.0f);
+    ourShader.setFloat("scale_v", 1.0f);
     ourShader.setVec3("objectColor", 0.5f, 0.5f, 0.5f);
 
     while (!glfwWindowShouldClose(mWindow))
@@ -129,8 +131,10 @@ int main()
         ImGui::SliderInt("##numberQU", &nbQuadU, 2, upperThreshold);
         ImGui::Text("Number of Quads V:");
         ImGui::SliderInt("##numberQV", &nbQuadV, 2, upperThreshold);
-        ImGui::Text("Scale:");
-        ImGui::SliderFloat("##scale", &scale, minScale, maxScale);
+        ImGui::Text("Scale U:");
+        ImGui::SliderFloat("##scale_u", &scale_u, minScale, maxScale);
+        ImGui::Text("Scale V:");
+        ImGui::SliderFloat("##scale_v", &scale_v, minScale, maxScale);
         ImGui::Checkbox("change Texture color", &whiteTexture);
         if (ImGui::CollapsingHeader("Controls:"))
         {
@@ -156,7 +160,8 @@ int main()
             ourShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
             ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
             // material properties
-            ourShader.setFloat("scale", scale);
+            ourShader.setFloat("scale_u", scale_u);
+            ourShader.setFloat("scale_v", scale_v);
             ourShader.setInt("element_u", nbQuadU);
             ourShader.setInt("element_v", nbQuadV);
             ourShader.setFloat("material.shininess", 32.0f);
