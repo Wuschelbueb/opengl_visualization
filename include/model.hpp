@@ -57,6 +57,7 @@ public:
         {
             meshes[i].Draw(shader);
         }
+        // used to display texture in fragment shader
         float center_u = glGetUniformLocation(shader.ID, "center_u");
         glUniform1f(center_u, centerU);
         float center_v = glGetUniformLocation(shader.ID, "center_v");
@@ -65,6 +66,12 @@ public:
         glUniform1i(nb_quadU, nbQuads);
         int nb_quadV = glGetUniformLocation(shader.ID, "element_v");
         glUniform1i(nb_quadV, nbQuads);
+
+        // used to skew texture in vertex shader
+        float center_u1 = glGetUniformLocation(shader.ID, "centerU");
+        glUniform1f(center_u1, centerU);
+        float center_v1 = glGetUniformLocation(shader.ID, "centerV");
+        glUniform1f(center_v1, centerV);
     }
 
     int getNbQuads() const

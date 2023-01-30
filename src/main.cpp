@@ -51,6 +51,7 @@ int main()
 
     fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
     float minScale = 0.1, maxScale = 4;
+    float skewU = 0.0f, skewV = 0.0f;
     float scale_u = 1.0f, scale_v = 1.0f;
     int nbQuads = 0, upperThreshold = 0;
     int nbQuadU = 0, nbQuadV = 0;
@@ -135,6 +136,10 @@ int main()
         ImGui::SliderFloat("##scale_u", &scale_u, minScale, maxScale);
         ImGui::Text("Scale V:");
         ImGui::SliderFloat("##scale_v", &scale_v, minScale, maxScale);
+        ImGui::Text("Skew along U:");
+        ImGui::SliderFloat("##angleX", &skewU, -M_PI, M_PI);
+        ImGui::Text("Skew along V:");
+        ImGui::SliderFloat("##angleY", &skewV, -M_PI, M_PI);
         ImGui::Checkbox("change Texture color", &whiteTexture);
         if (ImGui::CollapsingHeader("Controls:"))
         {
@@ -160,6 +165,9 @@ int main()
             ourShader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
             ourShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
             // material properties
+            glm::mat2 shearMatrix = glm::mat2(1.0f, skewV,
+                                              skewU, 1.0f);
+            ourShader.setMat2("shearMatrix", shearMatrix);
             ourShader.setFloat("scale_u", scale_u);
             ourShader.setFloat("scale_v", scale_v);
             ourShader.setInt("element_u", nbQuadU);
