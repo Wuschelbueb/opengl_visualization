@@ -53,7 +53,7 @@ int main()
     float minScale = 0.1, maxScale = 4;
     float skewU = 0.0f, skewV = 0.0f;
     float scale_u = 1.0f, scale_v = 1.0f;
-    int nbQuads = 0, upperThreshold = 0;
+    int nbQuads = 0, quadU = 0, quadV = 0, upperThreshold = 0;
     int nbQuadU = 0, nbQuadV = 0;
 
     IMGUI_CHECKVERSION();
@@ -108,9 +108,9 @@ int main()
                     nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 1);
                     if (result == NFD_OKAY)
                     {
-                        loadModel(outPath.get(), ourModel, nbQuads, upperThreshold, camera, showObject);
-                        nbQuadU = nbQuads;
-                        nbQuadV = nbQuads;
+                        loadModel(outPath.get(), ourModel, nbQuads, quadU, quadV, upperThreshold, camera, showObject);
+                        nbQuadU = quadU;
+                        nbQuadV = quadV;
                     }
                 }
                 ImGui::EndMenu();
@@ -122,9 +122,9 @@ int main()
             nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 1);
             if (result == NFD_OKAY)
             {
-                loadModel(outPath.get(), ourModel, nbQuads, upperThreshold, camera, showObject);
-                nbQuadU = nbQuads;
-                nbQuadV = nbQuads;
+                loadModel(outPath.get(), ourModel, nbQuads, quadU, quadV, upperThreshold, camera, showObject);
+                nbQuadU = quadU;
+                nbQuadV = quadV;
             }
         }
         ImGui::Begin("Description", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
@@ -294,11 +294,21 @@ void mouse_button(GLFWwindow *window, int button, int action, int mods)
     }
 }
 
-void loadModel(const string &path, Model &ourModel, int &nbQuads, int &upperThreshold, Camera &camera, bool &showObject)
+void loadModel(const string &path, Model &ourModel, int &nbQuads, int &quadU, int &quadV, int &upperThreshold, Camera &camera, bool &showObject)
 {
     ourModel.loadNewModel(path, ".");
-    nbQuads = ourModel.getNbQuads();
-    upperThreshold = nbQuads * 4;
+    std::tuple<int, int> quads = ourModel.getNbQuads();
+    quadU = std::get<0>(quads);
+    quadV = std::get<1>(quads);
+    nbQuads = 1;
+    if (quadU > quadV)
+    {
+        upperThreshold = quadU * 4;
+    }
+    else
+    {
+        upperThreshold = quadV * 4;
+    }
     origin = ourModel.GetObjCenter();
     cameraStartPosition = origin + glm::vec3(0.0f, 0.0f, 4.0f);
     camera.Position = (cameraStartPosition);

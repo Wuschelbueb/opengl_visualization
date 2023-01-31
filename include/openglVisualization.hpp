@@ -63,6 +63,6 @@ void mouse_callback(GLFWwindow *window, double mouseX, double mouseY);
 void mouse_button(GLFWwindow *window, int button, int action, int mods);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void initModel(std::string const &path, Shader &ourShader, Model &ourModel);
-void loadModel(const string &path, Model &ourModel, int &nbQuads, int &upperThreshold, Camera &camera, bool &showObject);
+void loadModel(const string &path, Model &ourModel, int &nbQuads, int &quadU, int &quadV, int &upperThreshold, Camera &camera, bool &showObject);
 
 #endif

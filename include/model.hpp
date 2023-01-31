@@ -63,9 +63,9 @@ public:
         float center_v = glGetUniformLocation(shader.ID, "center_v");
         glUniform1f(center_v, centerV);
         int nb_quadU = glGetUniformLocation(shader.ID, "element_u");
-        glUniform1i(nb_quadU, nbQuads);
+        glUniform1i(nb_quadU, nbQuadsU);
         int nb_quadV = glGetUniformLocation(shader.ID, "element_v");
-        glUniform1i(nb_quadV, nbQuads);
+        glUniform1i(nb_quadV, nbQuadsV);
 
         // used to skew texture in vertex shader
         float center_u1 = glGetUniformLocation(shader.ID, "centerU");
@@ -74,9 +74,9 @@ public:
         glUniform1f(center_v1, centerV);
     }
 
-    int getNbQuads() const
+    std::tuple<int,int> getNbQuads() const
     {
-        return nbQuads;
+        return {nbQuadsU, nbQuadsV};
     }
 
     glm::vec3 GetObjCenter()
@@ -88,7 +88,7 @@ private:
     // used to calculate center
     glm::vec3 objectCenter = glm::vec3(0.0f, 0.0f, 0.0f);
     double centerU = 0, centerV = 0;
-    int nbQuads = 0;
+    int nbQuadsU = 0, nbQuadsV = 0;
     // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
     void loadModel(std::string const &path, std::string const &pathTex)
     {
@@ -118,15 +118,20 @@ private:
         {
             while (getline(file, line))
             {
+                if (line.find("# nbQuadsU: ") == 0)
+                {
+                    std::stringstream ss(line.substr(11));
+                    ss >> nbQuadsU;
+                }
+                if (line.find("# nbQuadsV: ") == 0)
+                {
+                    std::stringstream ss(line.substr(11));
+                    ss >> nbQuadsV;
+                }
                 if (line.find("# TexCoords: ") == 0)
                 {
                     std::stringstream ss(line.substr(12));
                     ss >> centerU >> centerV;
-                }
-                if (line.find("# nbQuads: ") == 0)
-                {
-                    std::stringstream ss(line.substr(10));
-                    ss >> nbQuads;
                 }
             }
             file.close();
