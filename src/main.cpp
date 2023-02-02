@@ -128,17 +128,14 @@ int main()
             }
         }
         ImGui::Begin("Description", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
-        ImGui::Text("Number of Quads U:");
+        ImGui::Text("Number of Quads U or V:");
         ImGui::SliderInt("##numberQU", &nbQuadU, 2, upperThreshold);
-        ImGui::Text("Number of Quads V:");
         ImGui::SliderInt("##numberQV", &nbQuadV, 2, upperThreshold);
-        ImGui::Text("Scale U:");
+        ImGui::Text("Scale U or V:");
         ImGui::SliderFloat("##scale_u", &scale_u, minScale, maxScale);
-        ImGui::Text("Scale V:");
         ImGui::SliderFloat("##scale_v", &scale_v, minScale, maxScale);
-        ImGui::Text("Skew along U:");
+        ImGui::Text("Skew along U or V:");
         ImGui::SliderFloat("##angleX", &skewU, -M_PI, M_PI);
-        ImGui::Text("Skew along V:");
         ImGui::SliderFloat("##angleY", &skewV, -M_PI, M_PI);
         ImGui::Checkbox("change Texture color", &whiteTexture);
         if (ImGui::CollapsingHeader("Controls:"))
